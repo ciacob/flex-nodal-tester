@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx" xmlns:flexnodal="com.github.ciacob.flexnodal.*">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+	<fx:Style>
+@namespace s "library://ns.adobe.com/flex/spark";
+		global {
+			font-size: 15;
+		}
+
+		s|WindowedApplication {
+			chromeColor: #444444;
+			backgroundColor: #444444;
+			color: #ffffff;
+		}
+	</fx:Style>
+
+	<s:VGroup padding="25" width="100%" height="100%"
+		horizontalAlign="justify">
+		<flexnodal:Nodal height="100%"/>
+
+	</s:VGroup>
+</s:WindowedApplication>
