@@ -53,26 +53,25 @@
 	<fx:Script>
 		<![CDATA[
 			import mx.collections.ArrayCollection;
-			import mx.collections.ArrayCollection;
 			import spark.events.IndexChangeEvent;
+			import com.github.ciacob.flexnodal.events.NodalEvent;
 			
 			// Flags to raise when the current chart has selection.
 			[Bindable]
 			private var _haveSelection:Boolean;
 			
 			// Sample charts to edit.
-			[Bindable]
 			private const dp:ArrayCollection = new ArrayCollection([
 						{
-							name: "Chart1",
+							name: "Blue",
 							values: [[0, 0.1], [0.5, 0.8], [0.95, 0], [1, 0]]
 						},
 						{
-							name: "Chart2",
+							name: "Red",
 							values: [[0, 0], [1, 1]]
 						},
 						{
-							name: "Chart3",
+							name: "Green",
 							values: [[0, 1], [1, 0]]
 						}
 					]);
@@ -95,15 +94,11 @@
 			 * Listener. Executes when the combo box is changed.
 			 */
 			private function _onCbChanged(event:IndexChangeEvent):void {
-				// TBD
-			}
-			
-			/**
-			 * Listener. Executed when user types something in the combobox
-			 * and commits the value (e.g., by pressing Tab).
-			 */
-			private function _labelToItem(input:String):* {
-				// TBD
+				if (!event || event.newIndex < 0 || event.newIndex > dp.length) {
+					return;
+				}
+				const dpItem : Object = dp.getItemAt(event.newIndex);
+				nodalEditor.activeChartItem = dpItem;
 			}
 			
 			/**
@@ -114,6 +109,15 @@
 					return;
 				}
 				// TBD
+			}
+
+			/**
+			 * Executed when user has activated a specific chart by clicking
+			 * on its line.
+			 */
+			private function _onChartActivated (event : NodalEvent) : void {
+				const chartDp : Object = event.payload;
+				chartsList.selectedItem = chartDp;
 			}
 		]]>
 	</fx:Script>
@@ -126,9 +130,10 @@
 
 			<!-- Current chart -->
 			<s:Group width="100%">
-				<s:ComboBox dataProvider="{dp}" labelField="name"
-					change="{_onCbChanged(event)}"
-					labelToItemFunction="{_labelToItem}"/>
+				<s:ComboBox
+					id="chartsList"
+					dataProvider="{dp}" labelField="name"
+					change="{_onCbChanged(event)}" />
 			</s:Group>
 
 			<!-- Selection-related actions -->
@@ -151,9 +156,12 @@
 		</s:HGroup>
 
 		<!-- Nodal component (charts editor) -->
-		<flexnodal:Nodal height="100%"
+		<flexnodal:Nodal
+			id="nodalEditor"
+			height="100%"
 			dataProvider="{dp}"
-			chartStyle="myChartStyle"/>
+			chartStyle="myChartStyle"
+			chartActivation="_onChartActivated (event)"/>
 
 	</s:VGroup>
 </s:WindowedApplication>
