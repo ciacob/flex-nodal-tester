@@ -8,10 +8,10 @@
 	<fx:Declarations>
 
 		<!-- Tab data provider -->
-		<s:ArrayCollection id="chartMode">
-			<fx:Object label="Normal" data="normal"/>
-			<fx:Object label="Exclusive" data="exclusive"/>
-			<fx:Object label="Isolated" data="isolated"/>
+		<s:ArrayCollection id="chartModes">
+			<fx:Object label="Normal" data="{Nodal.NORMAL}"/>
+			<fx:Object label="Exclusive" data="{Nodal.EXCLUSIVE}"/>
+			<fx:Object label="Isolated" data="{Nodal.ISOLATED}"/>
 		</s:ArrayCollection>
 	</fx:Declarations>
 
@@ -93,30 +93,30 @@
 			/**
 			 * Listener. Executes when the combo box is changed.
 			 */
-			private function _onCbChanged(event:IndexChangeEvent):void {
+			private function _onActiveChartChanged(event:IndexChangeEvent):void {
 				if (!event || event.newIndex < 0 || event.newIndex > dp.length) {
 					return;
 				}
-				const dpItem : Object = dp.getItemAt(event.newIndex);
+				const dpItem:Object = dp.getItemAt(event.newIndex);
 				nodalEditor.activeChartItem = dpItem;
 			}
 			
 			/**
 			 * Executed when user clicks on one of the tabs.
 			 */
-			private function _onTabClick(event:IndexChangeEvent):void {
-				if (!event || event.newIndex < 0) {
+			private function _onModeChanged(event:IndexChangeEvent):void {
+				if (!event || event.newIndex < 0 || event.newIndex > chartModes.length) {
 					return;
 				}
-				// TBD
+				nodalEditor.operatingMode = chartModes[event.newIndex].data;
 			}
-
+			
 			/**
 			 * Executed when user has activated a specific chart by clicking
 			 * on its line.
 			 */
-			private function _onChartActivated (event : NodalEvent) : void {
-				const chartDp : Object = event.payload;
+			private function _onChartActivated(event:NodalEvent):void {
+				const chartDp:Object = event.payload;
 				chartsList.selectedItem = chartDp;
 			}
 		]]>
@@ -133,7 +133,7 @@
 				<s:ComboBox
 					id="chartsList"
 					dataProvider="{dp}" labelField="name"
-					change="{_onCbChanged(event)}" />
+					change="{_onActiveChartChanged(event)}"/>
 			</s:Group>
 
 			<!-- Selection-related actions -->
@@ -149,7 +149,10 @@
 
 			<!-- Editing mode for current chart -->
 			<s:Group width="100%">
-				<s:ButtonBar dataProvider="{chartMode}"
+				<s:ButtonBar id="modeButtons"
+					selectedIndex="0"
+					dataProvider="{chartModes}"
+					change="_onModeChanged(event)"
 					right="0"/>
 			</s:Group>
 
