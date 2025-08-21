@@ -55,8 +55,9 @@
 			import mx.collections.ArrayCollection;
 			import spark.events.IndexChangeEvent;
 			import com.github.ciacob.flexnodal.events.NodalEvent;
+			import com.github.ciacob.flexnodal.Nodal;
 			
-			// Flags to raise when the current chart has selection.
+			// Flags to raise when the active chart has selection.
 			[Bindable]
 			private var _haveSelection:Boolean;
 			
@@ -77,21 +78,27 @@
 					]);
 			
 			/**
-			 * Removes current's chart selection.
+			 * Removes active chart's selection.
 			 */
 			private function _clearSelection():void {
-				// TBD
+				if (!_haveSelection) {
+					return;
+				}
+				nodalEditor.clearSelection();
 			}
 			
 			/**
-			 * Deletes current chart's selection.
+			 * Deletes active chart's selection.
 			 */
 			private function _deleteSelection():void {
-				// TBD
+				if (!_haveSelection) {
+					return;
+				}
+				nodalEditor.deleteSelection();
 			}
 			
 			/**
-			 * Listener. Executes when the combo box is changed.
+			 * Listener. Executes when the "charts list" combo box is changed.
 			 */
 			private function _onActiveChartChanged(event:IndexChangeEvent):void {
 				if (!event || event.newIndex < 0 || event.newIndex > dp.length) {
@@ -119,6 +126,22 @@
 				const chartDp:Object = event.payload;
 				chartsList.selectedItem = chartDp;
 			}
+			
+			/**
+			 * Executed when user has changed the values of the active chart by
+			 * adding, deleting or moving nodes.
+			 */
+			private function _onChartDataChanged(event:NodalEvent):void {
+				trace(event, JSON.stringify(event.payload));
+			}
+			
+			/**
+			 * Executed when user has caused the selection of the active chart to
+			 * change.
+			 */
+			private function _onSelectionChanged(event:NodalEvent):void {
+				_haveSelection = event && event.payload && event.payload.selectedNode;
+			}
 		]]>
 	</fx:Script>
 
@@ -128,7 +151,7 @@
 		<!-- Controls bar -->
 		<s:HGroup id="controls">
 
-			<!-- Current chart -->
+			<!-- List of available charts. Sets and reflects the active chart. -->
 			<s:Group width="100%">
 				<s:ComboBox
 					id="chartsList"
@@ -136,7 +159,7 @@
 					change="{_onActiveChartChanged(event)}"/>
 			</s:Group>
 
-			<!-- Selection-related actions -->
+			<!-- Selection-related UI -->
 			<s:HGroup horizontalAlign="center" width="100%">
 				<s:Button label="Clear selection"
 					enabled="{_haveSelection}"
@@ -164,6 +187,8 @@
 			height="100%"
 			dataProvider="{dp}"
 			chartStyle="myChartStyle"
+			selectionChange="_onSelectionChanged (event)"
+			chartDataChange="_onChartDataChanged (event)"
 			chartActivation="_onChartActivated (event)"/>
 
 	</s:VGroup>
