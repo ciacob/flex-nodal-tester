@@ -3,7 +3,7 @@
 	xmlns:fx="http://ns.adobe.com/mxml/2009"
 	xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx"
-	xmlns:flexnodal="com.github.ciacob.flexnodal.*">
+	xmlns:flexnodal="com.github.ciacob.flexnodal.*" xmlns:components="com.github.ciacob.flexnodal.components.*">
 
 	<fx:Declarations>
 
@@ -190,6 +190,14 @@
 			selectionChange="_onSelectionChanged (event)"
 			chartDataChange="_onChartDataChanged (event)"
 			chartActivation="_onChartActivated (event)"/>
+
+			<components:BackgroundCell width="200" 
+			height="32" 
+			bgColor="#336699"
+			bgAlpha="0.5"
+			label="Test"
+			textColor="#ffee00"
+			textFontSize="22" />
 
 	</s:VGroup>
 </s:WindowedApplication>
