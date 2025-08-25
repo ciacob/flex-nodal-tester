@@ -56,6 +56,7 @@
 			import spark.events.IndexChangeEvent;
 			import com.github.ciacob.flexnodal.events.NodalEvent;
 			import com.github.ciacob.flexnodal.Nodal;
+			import mx.collections.ArrayCollection;
 			
 			// Flags to raise when the active chart has selection.
 			[Bindable]
@@ -76,6 +77,28 @@
 							values: [[0, 1], [1, 0]]
 						}
 					]);
+
+			// Grid cells to display underneath the charts.
+			private const gridDp:ArrayCollection = new ArrayCollection([
+				{ axis: 'x', stop: 0.1, label: '10' },
+				{ axis: 'x', stop: 0.2, label: '20' },
+				{ axis: 'x', stop: 0.3, label: '30' },
+				{ axis: 'x', stop: 0.4, label: '40' },
+				{ axis: 'x', stop: 0.5, label: '50' },
+				{ axis: 'x', stop: 0.6, label: '60' },
+				{ axis: 'x', stop: 0.7, label: '70' },
+				{ axis: 'x', stop: 0.8, label: '80' },
+				{ axis: 'x', stop: 0.9, label: '90' },
+				{ axis: 'y', stop: 0.1, label: '10' },
+				{ axis: 'y', stop: 0.2, label: '20' },
+				{ axis: 'y', stop: 0.3, label: '30' },
+				{ axis: 'y', stop: 0.4, label: '40' },
+				{ axis: 'y', stop: 0.5, label: '50' },
+				{ axis: 'y', stop: 0.6, label: '60' },
+				{ axis: 'y', stop: 0.7, label: '70' },
+				{ axis: 'y', stop: 0.8, label: '80' },
+				{ axis: 'y', stop: 0.9, label: '90' },
+		]);
 			
 			/**
 			 * Removes active chart's selection.
@@ -186,18 +209,11 @@
 			id="nodalEditor"
 			height="100%"
 			dataProvider="{dp}"
+			gridDataProvider="{gridDp}"
 			chartStyle="myChartStyle"
 			selectionChange="_onSelectionChanged (event)"
 			chartDataChange="_onChartDataChanged (event)"
 			chartActivation="_onChartActivated (event)"/>
-
-			<components:BackgroundCell width="200" 
-			height="32" 
-			bgColor="#336699"
-			bgAlpha="0.5"
-			label="Test"
-			textColor="#ffee00"
-			textFontSize="22" />
 
 	</s:VGroup>
 </s:WindowedApplication>
