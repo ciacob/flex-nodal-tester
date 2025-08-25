@@ -40,13 +40,23 @@
 		}
 
 		.myChartStyle {
-			padding: 10;
+			padding: 15;
+
 			lineThickness: 4;
 			lineColor: #3c0097;
 			lineColorOver: #6637ad;
 			lineColorSelected: #934bff;
 			lineColorAnchor: #301b4f;
 			defaultAlpha : 0.5;
+
+			layerColor: #9794a1;
+			chartBg: #f6e2f9;
+			chartBgAlpha: 1;
+
+			xAxisColor: #3a0256;
+			yAxisColor: #003e6e;
+			xAxisAlpha: 1;
+			yAxisAlpha: 1;
 		}
 	</fx:Style>
 
@@ -77,28 +87,28 @@
 							values: [[0, 1], [1, 0]]
 						}
 					]);
-
+			
 			// Grid cells to display underneath the charts.
 			private const gridDp:ArrayCollection = new ArrayCollection([
-				{ axis: 'x', stop: 0.1, label: '10' },
-				{ axis: 'x', stop: 0.2, label: '20' },
-				{ axis: 'x', stop: 0.3, label: '30' },
-				{ axis: 'x', stop: 0.4, label: '40' },
-				{ axis: 'x', stop: 0.5, label: '50' },
-				{ axis: 'x', stop: 0.6, label: '60' },
-				{ axis: 'x', stop: 0.7, label: '70' },
-				{ axis: 'x', stop: 0.8, label: '80' },
-				{ axis: 'x', stop: 0.9, label: '90' },
-				{ axis: 'y', stop: 0.1, label: '10' },
-				{ axis: 'y', stop: 0.2, label: '20' },
-				{ axis: 'y', stop: 0.3, label: '30' },
-				{ axis: 'y', stop: 0.4, label: '40' },
-				{ axis: 'y', stop: 0.5, label: '50' },
-				{ axis: 'y', stop: 0.6, label: '60' },
-				{ axis: 'y', stop: 0.7, label: '70' },
-				{ axis: 'y', stop: 0.8, label: '80' },
-				{ axis: 'y', stop: 0.9, label: '90' },
-		]);
+						{axis: 'x', stop: 0.1, label: '10'},
+						{axis: 'x', stop: 0.2, label: '20'},
+						{axis: 'x', stop: 0.3, label: '30'},
+						{axis: 'x', stop: 0.4, label: '40'},
+						{axis: 'x', stop: 0.5, label: '50'},
+						{axis: 'x', stop: 0.6, label: '60'},
+						{axis: 'x', stop: 0.7, label: '70'},
+						{axis: 'x', stop: 0.8, label: '80'},
+						{axis: 'x', stop: 0.9, label: '90'},
+						{axis: 'y', stop: 0.1, label: '10'},
+						{axis: 'y', stop: 0.2, label: '20'},
+						{axis: 'y', stop: 0.3, label: '30'},
+						{axis: 'y', stop: 0.4, label: '40'},
+						{axis: 'y', stop: 0.5, label: '50'},
+						{axis: 'y', stop: 0.6, label: '60'},
+						{axis: 'y', stop: 0.7, label: '70'},
+						{axis: 'y', stop: 0.8, label: '80'},
+						{axis: 'y', stop: 0.9, label: '90'},
+					]);
 			
 			/**
 			 * Removes active chart's selection.
