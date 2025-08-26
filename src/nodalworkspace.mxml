@@ -3,7 +3,8 @@
 	xmlns:fx="http://ns.adobe.com/mxml/2009"
 	xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx"
-	xmlns:flexnodal="com.github.ciacob.flexnodal.*" xmlns:components="com.github.ciacob.flexnodal.components.*">
+	xmlns:flexnodal="com.github.ciacob.flexnodal.*"
+	xmlns:components="com.github.ciacob.flexnodal.components.*">
 
 	<fx:Declarations>
 
@@ -27,9 +28,14 @@
 			color: #ffffff;
 		}
 
+		s|NumericStepper,
 		s|ComboBox {
 			borderColor: #000000;
 			contentBackgroundColor: #141414;
+		}
+
+		s|NumericStepper  {
+			paddingLeft: 5;
 		}
 
 		s|List {
@@ -58,6 +64,29 @@
 			xAxisAlpha: 1;
 			yAxisAlpha: 1;
 		}
+
+		.selectionPanelStyle {
+			verticalGap: 10;
+			horizontalGap: 10;
+			padding: 5;
+			rowHeight: 25;
+			minHeight: 105;
+			headerStyle: mySelHeaderStyle;
+			bodyStyle: mySelBodyStyle;
+			buttonStyle: mySelButtonStyle;
+		}
+
+		.mySelHeaderStyle {
+			color: #bfabca;
+		}
+
+		.mySelBodyStyle {
+			color: #ff0000;
+		}
+
+		.mySelButtonStyle {
+			color: #00ff00;
+		}
 	</fx:Style>
 
 	<fx:Script>
@@ -66,8 +95,7 @@
 			import spark.events.IndexChangeEvent;
 			import com.github.ciacob.flexnodal.events.NodalEvent;
 			import com.github.ciacob.flexnodal.Nodal;
-			import mx.collections.ArrayCollection;
-			
+
 			// Flags to raise when the active chart has selection.
 			[Bindable]
 			private var _haveSelection:Boolean;
@@ -158,6 +186,10 @@
 			private function _onChartActivated(event:NodalEvent):void {
 				const chartDp:Object = event.payload;
 				chartsList.selectedItem = chartDp;
+			
+				if (chartDp && selectionPanel) {
+					selectionPanel.chartName = chartDp.name || '';
+				}
 			}
 			
 			/**
@@ -173,7 +205,21 @@
 			 * change.
 			 */
 			private function _onSelectionChanged(event:NodalEvent):void {
-				_haveSelection = event && event.payload && event.payload.selectedNode;
+				if (!event) {
+					return;
+				}
+				selectionPanel.dataProvider = event.payload;
+			}
+			
+			/**
+			 * Executed when user has modified the value of one or more selected nodes
+			 * by means of the selection panel.
+			 */
+			private function _onSelectionPatch(event:NodalEvent):void {
+				if (!event || !event.payload) {
+					return;
+				}
+				nodalEditor.patchSelection(event.payload);
 			}
 		]]>
 	</fx:Script>
@@ -224,6 +270,14 @@
 			selectionChange="_onSelectionChanged (event)"
 			chartDataChange="_onChartDataChanged (event)"
 			chartActivation="_onChartActivated (event)"/>
+
+		<!-- Selection panel, for monitoring and adjusting selected nodes' value -->
+		<s:VGroup horizontalAlign="center">
+			<components:SelectionPanel
+				id="selectionPanel"
+				styleName="selectionPanelStyle"				
+				selectionPatch="_onSelectionPatch (event)"/>
+		</s:VGroup>
 
 	</s:VGroup>
 </s:WindowedApplication>
