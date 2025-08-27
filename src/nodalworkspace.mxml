@@ -275,7 +275,7 @@
 		<s:VGroup horizontalAlign="center">
 			<components:SelectionPanel
 				id="selectionPanel"
-				styleName="selectionPanelStyle"				
+				styleName="selectionPanelStyle"
 				selectionPatch="_onSelectionPatch (event)"/>
 		</s:VGroup>
 
