@@ -106,12 +106,12 @@
 						{
 							name: "Blue",
 							values: [[0, 0.1], [0.5, 0.8], [0.95, 0], [1, 0]],
-							dashStyle: [5,5]
+							dashStyle: [10,15]
 						},
 						{
 							name: "Red",
 							values: [[0, 0], [1, 1]],
-							dashStyle: [1,5]
+							dashStyle: [1,10]
 						},
 						{
 							name: "Green",
