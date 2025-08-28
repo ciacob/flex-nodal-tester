@@ -96,22 +96,23 @@
 			import spark.events.IndexChangeEvent;
 			import com.github.ciacob.flexnodal.events.NodalEvent;
 			import com.github.ciacob.flexnodal.Nodal;
-
+			
 			// Flags to raise when the active chart has selection.
 			[Bindable]
 			private var _haveSelection:Boolean;
 			
 			// Sample charts to edit.
-			private const dp:ArrayCollection = new ArrayCollection([
+			[Bindable]
+			private var dp:ArrayCollection = new ArrayCollection([
 						{
 							name: "Blue",
 							values: [[0, 0.1], [0.5, 0.8], [0.95, 0], [1, 0]],
-							dashStyle: [10,15]
+							dashStyle: [10, 15]
 						},
 						{
 							name: "Red",
 							values: [[0, 0], [1, 1]],
-							dashStyle: [1,10]
+							dashStyle: [1, 10]
 						},
 						{
 							name: "Green",
@@ -224,6 +225,106 @@
 				}
 				nodalEditor.patchSelection(event.payload);
 			}
+			
+			// [TESTS]
+			private var _numTests:int = 0;
+			
+			private var _testCharts:Array = [];
+			
+			private function _randomUnit():Number {
+				// Generate a random number in [0,1], inclusive of both ends
+				// Multiply by 10000 (or any precision scale), round, then divide back.
+				return Math.round(Math.random() * 10000) / 10000;
+			}
+			
+			private function _addRandomChart():int {
+				if (!dp) {
+					_setEmptyDataProvider();
+				}
+				var count:int = Math.floor(Math.random() * 21); // 0..20
+				var values:Array = [];
+				for (var i:int = 0; i < count; i++) {
+					var x:Number = _randomUnit();
+					var y:Number = _randomUnit();
+					values.push([x, y]);
+				}
+			
+				values.sort(function(a:Array, b:Array):int {
+						return a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0);
+					});
+			
+				var item:Object = {
+						name: "Random Item " + (++_numTests),
+						values: values
+					};
+				if (Math.random() < 0.5) {
+					var dash:int = Math.max(1, Math.round(Math.random() * 20));
+					var gap:int = Math.max(1, Math.round(Math.random() * 20));
+					item.dashStyle = [dash, gap];
+				}
+			
+				var index:int = Math.floor(Math.random() * (dp.length + 1));
+				dp.addItemAt(item, index);
+				return index;
+			}
+			
+			private function _addEmptyChart():void {
+				if (!dp) {
+					_setEmptyDataProvider();
+				}
+				var index:int = Math.floor(Math.random() * (dp.length + 1));
+				var emptyChart:Object = {
+						name: "Random Item " + (++_numTests),
+						values: []
+					};
+				dp.addItemAt(emptyChart, index);
+				_testCharts.push(emptyChart);
+			}
+			
+			private function _addTestChart():void {
+				if (!dp) {
+					return;
+				}
+				const idx:int = _addRandomChart();
+				const testChart:Object = dp.getItemAt(idx);
+				trace('`__addTestChart()` called. Added (index, item):', idx, JSON.stringify(testChart));
+				_testCharts.push(testChart);
+			}
+			
+			private function _removeLastTestChart():void {
+				if (!dp) {
+					return;
+				}
+				if (!_testCharts.length) {
+					return;
+				}
+				const toRemove:Object = _testCharts.pop();
+				var removed:Boolean;
+				if (toRemove === null) {
+					removed = dp.removeItemAt(dp.getItemIndex(null));
+				}
+				else {
+					removed = dp.removeItem(toRemove);
+				}
+				trace('`_removeRandomItem()` called. Removed: ', removed ? JSON.stringify(toRemove) : 'NULL');
+			}
+			
+			private function _setNullDataProvider():void {
+				dp = null;
+			}
+			
+			private function _setEmptyDataProvider():void {
+				dp = new ArrayCollection;
+			}
+			
+			private function _setNullItem():void {
+				if (!dp) {
+					_setEmptyDataProvider();
+				}
+				var index:int = Math.floor(Math.random() * (dp.length + 1));
+				dp.addItemAt(null, index);
+				_testCharts.push(null);
+			}
 		]]>
 	</fx:Script>
 
@@ -281,6 +382,15 @@
 				styleName="selectionPanelStyle"
 				selectionPatch="_onSelectionPatch (event)"/>
 		</s:VGroup>
+
+		<s:HGroup horizontalAlign="center">
+			<s:Button label="Add test chart" click="_addTestChart()"/>
+			<s:Button label="Add empty chart" click="_addEmptyChart()"/>
+			<s:Button label="Remove last test chart" click="_removeLastTestChart()"/>
+			<s:Button label="Set NULL data provider" click="_setNullDataProvider()"/>
+			<s:Button label="Set NULL item" click="_setNullItem()"/>
+			<s:Button label="Set empty data provider" click="_setEmptyDataProvider()"/>
+		</s:HGroup>
 
 	</s:VGroup>
 </s:WindowedApplication>
