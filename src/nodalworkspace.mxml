@@ -10,6 +10,7 @@
 
 		<!-- Tab data provider -->
 		<s:ArrayCollection id="chartModes">
+			<fx:Object label="Readonly" data="{Nodal.READONLY}"/>
 			<fx:Object label="Normal" data="{Nodal.NORMAL}"/>
 			<fx:Object label="Exclusive" data="{Nodal.EXCLUSIVE}"/>
 			<fx:Object label="Isolated" data="{Nodal.ISOLATED}"/>
@@ -104,11 +105,13 @@
 			private const dp:ArrayCollection = new ArrayCollection([
 						{
 							name: "Blue",
-							values: [[0, 0.1], [0.5, 0.8], [0.95, 0], [1, 0]]
+							values: [[0, 0.1], [0.5, 0.8], [0.95, 0], [1, 0]],
+							dashStyle: [5,5]
 						},
 						{
 							name: "Red",
-							values: [[0, 0], [1, 1]]
+							values: [[0, 0], [1, 1]],
+							dashStyle: [1,5]
 						},
 						{
 							name: "Green",
@@ -252,7 +255,7 @@
 			<!-- Editing mode for current chart -->
 			<s:Group width="100%">
 				<s:ButtonBar id="modeButtons"
-					selectedIndex="0"
+					selectedIndex="1"
 					dataProvider="{chartModes}"
 					change="_onModeChanged(event)"
 					right="0"/>
