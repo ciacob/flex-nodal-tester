@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!---
+
+Test class. Instruments a demo integration of the `Nodal.mxml` and
+`SelectionPanel.mxml` components. Also uses own UI to access/consume
+the API `Nodal.mxml` provides.
+
+N.B.: this is NOT production code. Don't just copy this over in your
+project mindlessly. Treat all of the below as an example.
+
+-->
+
 <s:WindowedApplication
 	xmlns:fx="http://ns.adobe.com/mxml/2009"
 	xmlns:s="library://ns.adobe.com/flex/spark"
 	xmlns:mx="library://ns.adobe.com/flex/mx"
 	xmlns:flexnodal="com.github.ciacob.flexnodal.*"
-	xmlns:components="com.github.ciacob.flexnodal.components.*">
+	xmlns:components="com.github.ciacob.flexnodal.components.*"
+	preinitialize="_onPreinitialize()">
 
 	<fx:Declarations>
 
@@ -101,7 +114,7 @@
 			[Bindable]
 			private var _haveSelection:Boolean;
 			
-			// Sample charts to edit.
+			// Sample charts to edit. Other can be added via test buttons.
 			[Bindable]
 			private var dp:ArrayCollection = new ArrayCollection([
 						{
@@ -145,7 +158,7 @@
 					]);
 			
 			/**
-			 * Removes active chart's selection.
+			 * Un-selects the active chart's selection.
 			 */
 			private function _clearSelection():void {
 				if (!_haveSelection) {
@@ -155,7 +168,7 @@
 			}
 			
 			/**
-			 * Deletes active chart's selection.
+			 * Deletes the active chart's selected nodes.
 			 */
 			private function _deleteSelection():void {
 				if (!_haveSelection) {
@@ -165,7 +178,15 @@
 			}
 			
 			/**
-			 * Listener. Executes when the "charts list" combo box is changed.
+			 * Listener. Executes at the beginning of the component initialization sequence.
+			 */
+			private function _onPreinitialize():void {
+				// TEST: disable active chart shadow
+				// Nodal.ACTIVE_CHART_SHADOW = null;
+			}
+			
+			/**
+			 * Listener. Executes when the "charts list" test combo box is changed.
 			 */
 			private function _onActiveChartChanged(event:IndexChangeEvent):void {
 				if (!event || event.newIndex < 0 || event.newIndex > dp.length) {
@@ -176,7 +197,7 @@
 			}
 			
 			/**
-			 * Executed when user clicks on one of the tabs.
+			 * Listener. Executes when user clicks on one of the test "Operation mode" tabs.
 			 */
 			private function _onModeChanged(event:IndexChangeEvent):void {
 				if (!event || event.newIndex < 0 || event.newIndex > chartModes.length) {
@@ -186,8 +207,8 @@
 			}
 			
 			/**
-			 * Executed when user has activated a specific chart by clicking
-			 * on its line.
+			 * Listener. Executes after user has activates a specific chart by clicking
+			 * on its line. Updates the `SelectionPanel` instance and our own test UI.
 			 */
 			private function _onChartActivated(event:NodalEvent):void {
 				const chartDp:Object = event.payload;
@@ -199,27 +220,30 @@
 			}
 			
 			/**
-			 * Executed when user has changed the values of the active chart by
+			 * Listener. Executes after user has changed the values of the active chart by
 			 * adding, deleting or moving nodes.
 			 */
 			private function _onChartDataChanged(event:NodalEvent):void {
+			
+				// Just prints out the new values.
 				trace(event, JSON.stringify(event.payload));
 			}
 			
 			/**
-			 * Executed when user has caused the selection of the active chart to
-			 * change.
+			 * Listener. Executes after user has caused the selection of the active chart to
+			 * change. Updates the `SelectionPanel` instance.
 			 */
 			private function _onSelectionChanged(event:NodalEvent):void {
 				if (!event) {
 					return;
 				}
 				selectionPanel.dataProvider = event.payload;
+				_haveSelection = event.payload && event.payload.selectedNode;
 			}
 			
 			/**
-			 * Executed when user has modified the value of one or more selected nodes
-			 * by means of the selection panel.
+			 * Listener. Executes after user has modified the value of one or more selected nodes
+			 * by means of the `SelectionPanel` instance.
 			 */
 			private function _onSelectionPatch(event:NodalEvent):void {
 				if (!event || !event.payload) {
@@ -228,7 +252,7 @@
 				nodalEditor.patchSelection(event.payload);
 			}
 			
-			// [TESTS]
+			// [STRESS_TESTING]
 			private var _numTests:int = 0;
 			
 			private var _testCharts:Array = [];
@@ -366,7 +390,7 @@
 
 		</s:HGroup>
 
-		<!-- Nodal component (charts editor) -->
+		<!-- Nodal component (the actual charts editor) -->
 		<flexnodal:Nodal
 			id="nodalEditor"
 			height="100%"
@@ -385,14 +409,21 @@
 				selectionPatch="_onSelectionPatch (event)"/>
 		</s:VGroup>
 
-		<s:HGroup horizontalAlign="center">
+		<!-- Various buttons for stress-testing -->
+		<s:TileGroup horizontalAlign="justify"
+			columnAlign="justifyUsingWidth"
+			rowAlign="justifyUsingHeight"
+			verticalGap="20" horizontalGap="20"
+			requestedRowCount="2"
+			rowHeight="22">
+
 			<s:Button label="Add test chart" click="_addTestChart()"/>
 			<s:Button label="Add empty chart" click="_addEmptyChart()"/>
 			<s:Button label="Remove last test chart" click="_removeLastTestChart()"/>
 			<s:Button label="Set NULL data provider" click="_setNullDataProvider()"/>
 			<s:Button label="Set NULL item" click="_setNullItem()"/>
 			<s:Button label="Set empty data provider" click="_setEmptyDataProvider()"/>
-		</s:HGroup>
+		</s:TileGroup>
 
 	</s:VGroup>
 </s:WindowedApplication>
