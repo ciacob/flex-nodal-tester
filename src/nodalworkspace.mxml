@@ -112,11 +112,13 @@
 						{
 							name: "Red",
 							values: [[0, 0], [1, 1]],
-							dashStyle: [1, 10]
+							dashStyle: [1, 10],
+							hueFactor: 0.3
 						},
 						{
 							name: "Green",
-							values: [[0, 1], [1, 0]]
+							values: [[0, 1], [1, 0]],
+							hueFactor: 0.6
 						}
 					]);
 			
