@@ -264,7 +264,6 @@ project mindlessly. Treat all of the below as an example.
 				// Update side information inside the `SelectionPanel` instance.
 				const chart:ChartDescriptor = dp.filter(filterFn)[0];
 				if (selectionPanel) {
-					selectionPanel.chartName = chart ? chart.name : 'Unknown chart';
 					selectionPanel.chartUid = chartUid;
 					// N.B.: actual selection detail is fed via `_onSelectionChanged`.
 				}
