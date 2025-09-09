@@ -109,6 +109,14 @@ project mindlessly. Treat all of the below as an example.
 			import spark.events.IndexChangeEvent;
 			import com.github.ciacob.flexnodal.events.NodalEvent;
 			import com.github.ciacob.flexnodal.Nodal;
+			import com.github.ciacob.flexnodal.utils.ChartDescriptor;
+			import com.github.ciacob.flexnodal.utils.Helpers;
+			import flash.geom.Point;
+			import mx.collections.ArrayCollection;
+			import com.github.ciacob.flexnodal.events.ChartEditEvent;
+			import com.github.ciacob.flexnodal.utils.ChartEdit;
+			import com.github.ciacob.flexnodal.events.SelectionEvent;
+			import com.github.ciacob.flexnodal.utils.SelectionDetails;
 			
 			// Flags to raise when the active chart has selection.
 			[Bindable]
@@ -116,24 +124,43 @@ project mindlessly. Treat all of the below as an example.
 			
 			// Sample charts to edit. Other can be added via test buttons.
 			[Bindable]
-			private var dp:ArrayCollection = new ArrayCollection([
-						{
-							name: "Blue",
-							values: [[0, 0.1], [0.5, 0.8], [0.95, 0], [1, 0]],
-							dashStyle: [10, 15]
-						},
-						{
-							name: "Red",
-							values: [[0, 0], [1, 1]],
-							dashStyle: [1, 10],
-							hueFactor: 0.3
-						},
-						{
-							name: "Green",
-							values: [[0, 1], [1, 0]],
-							hueFactor: 0.6
-						}
-					]);
+			private var dp:Vector.<ChartDescriptor> = new <ChartDescriptor>[
+					new ChartDescriptor(
+						Helpers.makeUuid(),
+						new <Point>[
+							new Point(0, 0.1),
+							new Point(0.5, 0.8),
+							new Point(0.95, 0),
+							new Point(1, 0),
+						],
+						"Blue",
+						0,
+						new <Number>[10, 15]
+					),
+					new ChartDescriptor(
+						Helpers.makeUuid(),
+						new <Point>[
+							new Point(0, 0),
+							new Point(1, 1)
+						],
+						"Red",
+						0.3,
+						new <Number>[1, 10]
+					),
+					new ChartDescriptor(
+						Helpers.makeUuid(),
+						new <Point>[
+							new Point(0, 1),
+							new Point(1, 0),
+						],
+						"Green",
+						0.6
+					)
+				];
+			
+			// Storage for the data provider of the "Active Chart" drop down.
+			[Bindable]
+			private var _chartsListDp:ArrayCollection;
 			
 			// Grid cells to display underneath the charts.
 			private const gridDp:ArrayCollection = new ArrayCollection([
@@ -181,19 +208,28 @@ project mindlessly. Treat all of the below as an example.
 			 * Listener. Executes at the beginning of the component initialization sequence.
 			 */
 			private function _onPreinitialize():void {
-				// TEST: disable active chart shadow
-				// Nodal.ACTIVE_CHART_SHADOW = null;
+				// Build the data provider for the "Active Chart" drop down.
+				_chartsListDp = new ArrayCollection;
+				for (var i:int = 0; i < dp.length; i++) {
+					const desc:ChartDescriptor = dp[i];
+					_chartsListDp.addItem({label: desc.name, uid: desc.uid});
+				}
 			}
 			
 			/**
 			 * Listener. Executes when the "charts list" test combo box is changed.
 			 */
-			private function _onActiveChartChanged(event:IndexChangeEvent):void {
-				if (!event || event.newIndex < 0 || event.newIndex > dp.length) {
+			private function _onActiveChartChanged():void {
+				if (!chartsList) {
 					return;
 				}
-				const dpItem:Object = dp.getItemAt(event.newIndex);
-				nodalEditor.activeChartItem = dpItem;
+			
+				const selectedItem:Object = chartsList.selectedItem;
+				if (!selectedItem) {
+					return;
+				}
+			
+				nodalEditor.activeChartId = selectedItem.uid;
 			}
 			
 			/**
@@ -211,11 +247,26 @@ project mindlessly. Treat all of the below as an example.
 			 * on its line. Updates the `SelectionPanel` instance and our own test UI.
 			 */
 			private function _onChartActivated(event:NodalEvent):void {
-				const chartDp:Object = event.payload;
-				chartsList.selectedItem = chartDp;
+				if (!event || !event.uid) {
+					return;
+				}
+				const chartUid:String = event.uid;
 			
-				if (chartDp && selectionPanel) {
-					selectionPanel.chartName = chartDp.name || '';
+				// Filtering utility
+				const filterFn:Function = function(item:Object, ...ignore):Boolean {
+					return item && item.uid === chartUid;
+				};
+			
+				// Update the "Active Chart" drop down.
+				const itemToSelect:Object = _chartsListDp.source.filter(filterFn)[0];
+				chartsList.selectedItem = itemToSelect;
+			
+				// Update side information inside the `SelectionPanel` instance.
+				const chart:ChartDescriptor = dp.filter(filterFn)[0];
+				if (selectionPanel) {
+					selectionPanel.chartName = chart ? chart.name : 'Unknown chart';
+					selectionPanel.chartUid = chartUid;
+					// N.B.: actual selection detail is fed via `_onSelectionChanged`.
 				}
 			}
 			
@@ -223,33 +274,38 @@ project mindlessly. Treat all of the below as an example.
 			 * Listener. Executes after user has changed the values of the active chart by
 			 * adding, deleting or moving nodes.
 			 */
-			private function _onChartDataChanged(event:NodalEvent):void {
+			private function _onNodesChange(event:ChartEditEvent):void {
 			
 				// Just prints out the new values.
-				trace(event, JSON.stringify(event.payload));
+				trace(event.edit);
 			}
 			
 			/**
 			 * Listener. Executes after user has caused the selection of the active chart to
 			 * change. Updates the `SelectionPanel` instance.
 			 */
-			private function _onSelectionChanged(event:NodalEvent):void {
-				if (!event) {
+			private function _onSelectionChanged(event:SelectionEvent):void {
+				if (!event || !event.details) {
 					return;
 				}
-				selectionPanel.dataProvider = event.payload;
-				_haveSelection = event.payload && event.payload.selectedNode;
+			
+				const selDetails:SelectionDetails = event.details;
+				selectionPanel.dataProvider = selDetails;
+				_haveSelection = !!selDetails.selectedValue;
 			}
 			
 			/**
 			 * Listener. Executes after user has modified the value of one or more selected nodes
 			 * by means of the `SelectionPanel` instance.
 			 */
-			private function _onSelectionPatch(event:NodalEvent):void {
-				if (!event || !event.payload) {
+			private function _onSelectionPatch(event:SelectionEvent):void {
+				if (!event || !event.details) {
 					return;
 				}
-				nodalEditor.patchSelection(event.payload);
+			
+				// N.B.: passing `true` as second argument also dispatches SELECTION_CHANGE
+				// and NODES_CHANGE events.
+				nodalEditor.patchSelection(event.details, true);
 			}
 			
 			// [STRESS_TESTING]
@@ -257,99 +313,125 @@ project mindlessly. Treat all of the below as an example.
 			
 			private var _testCharts:Array = [];
 			
+			/**
+			 * Generates a random number in [0,1], inclusive of both ends.
+			 */
 			private function _randomUnit():Number {
-				// Generate a random number in [0,1], inclusive of both ends
-				// Multiply by 10000 (or any precision scale), round, then divide back.
 				return Math.round(Math.random() * 10000) / 10000;
 			}
 			
+			/**
+			 * Creates and adds a new chart with randomly generated data points to the data provider.
+			 *
+			 * <p>This function generates a chart with the following characteristics:</p>
+			 * <ul>
+			 * <li>Random number of data points (0-20)</li>
+			 * <li>Each point has random x,y coordinates in the range [0,1]</li>
+			 * <li>Points are automatically sorted by x-coordinate</li>
+			 * <li>Chart has a random hue factor for coloring</li>
+			 * <li>50% chance of having a random dash style</li>
+			 * <li>Inserted at a random position in the data provider</li>
+			 * </ul>
+			 *
+			 * <p>If the data provider is null, it will be initialized as an empty Vector.</p>
+			 *
+			 * @return The index at which the new chart was inserted in the data provider
+			 *
+			 * @see ChartDescriptor
+			 * @see Helpers#makeUuid()
+			 */
 			private function _addRandomChart():int {
-				if (!dp) {
-					_setEmptyDataProvider();
-				}
+				const $dp:Vector.<ChartDescriptor> = dp? dp.concat() : new <ChartDescriptor>[];
 				var count:int = Math.floor(Math.random() * 21); // 0..20
-				var values:Array = [];
+				var values:Vector.<Point> = new <Point>[];
 				for (var i:int = 0; i < count; i++) {
 					var x:Number = _randomUnit();
 					var y:Number = _randomUnit();
-					values.push([x, y]);
+					values.push(new Point(x, y));
 				}
 			
-				values.sort(function(a:Array, b:Array):int {
-						return a[0] < b[0] ? -1 : (a[0] > b[0] ? 1 : 0);
+				values.sort(function(a:Point, b:Point):int {
+						return a.x < b.x ? -1 : (a.x > b.x ? 1 : 0);
 					});
 			
-				var item:Object = {
-						name: "Random Item " + (++_numTests),
-						values: values
-					};
+				const name:String = "Random Item " + (++_numTests);
+				const uid:String = Helpers.makeUuid();
+				const hueFactor:Number = _randomUnit();
+			
+				var dashStyle:Vector.<Number> = null;
+			
 				if (Math.random() < 0.5) {
 					var dash:int = Math.max(1, Math.round(Math.random() * 20));
 					var gap:int = Math.max(1, Math.round(Math.random() * 20));
-					item.dashStyle = [dash, gap];
+					dashStyle = new <Number>[dash, gap];
 				}
 			
-				var index:int = Math.floor(Math.random() * (dp.length + 1));
-				dp.addItemAt(item, index);
+				var testChart:ChartDescriptor = new ChartDescriptor(uid, values, name, hueFactor, dashStyle);
+				_testCharts.push(testChart);
+				const index:int = Math.floor(Math.random() * ($dp.length + 1));
+				$dp.splice(index, 0, testChart);
+			
+				dp = $dp;
+			
+				trace('`_addRandomChart()` called. Added (index, item):', index, testChart);
 				return index;
 			}
 			
-			private function _addEmptyChart():void {
-				if (!dp) {
-					_setEmptyDataProvider();
-				}
-				var index:int = Math.floor(Math.random() * (dp.length + 1));
-				var emptyChart:Object = {
-						name: "Random Item " + (++_numTests),
-						values: []
-					};
-				dp.addItemAt(emptyChart, index);
-				_testCharts.push(emptyChart);
-			}
+			// private function _addEmptyChart():void {
+			// if (!dp) {
+			// _setEmptyDataProvider();
+			// }
+			// var index:int = Math.floor(Math.random() * (dp.length + 1));
+			// var emptyChart:Object = {
+			// name: "Random Item " + (++_numTests),
+			// values: []
+			// };
+			// dp.addItemAt(emptyChart, index);
+			// _testCharts.push(emptyChart);
+			// }
 			
-			private function _addTestChart():void {
-				if (!dp) {
-					return;
-				}
-				const idx:int = _addRandomChart();
-				const testChart:Object = dp.getItemAt(idx);
-				trace('`__addTestChart()` called. Added (index, item):', idx, JSON.stringify(testChart));
-				_testCharts.push(testChart);
-			}
+			// private function _addTestChart():void {
+			// if (!dp) {
+			// return;
+			// }
+			// const idx:int = _addRandomChart();
+			// const testChart:Object = dp.getItemAt(idx);
+			// _testCharts.push(testChart);
+			// }
 			
-			private function _removeLastTestChart():void {
-				if (!dp) {
-					return;
-				}
-				if (!_testCharts.length) {
-					return;
-				}
-				const toRemove:Object = _testCharts.pop();
-				var removed:Boolean;
-				if (toRemove === null) {
-					removed = dp.removeItemAt(dp.getItemIndex(null));
-				}
-				else {
-					removed = dp.removeItem(toRemove);
-				}
-				trace('`_removeRandomItem()` called. Removed: ', removed ? JSON.stringify(toRemove) : 'NULL');
-			}
+			// private function _removeLastTestChart():void {
+			// if (!dp) {
+			// return;
+			// }
+			// if (!_testCharts.length) {
+			// return;
+			// }
+			// const toRemove:Object = _testCharts.pop();
+			// var removed:Boolean;
+			// if (toRemove === null) {
+			// removed = dp.removeItemAt(dp.getItemIndex(null));
+			// }
+			// else {
+			// removed = dp.removeItem(toRemove);
+			// }
+			// trace('`_removeRandomItem()` called. Removed: ', removed ? JSON.stringify(toRemove) : 'NULL');
+			// }
 			
-			private function _setNullDataProvider():void {
-				dp = null;
-			}
+			// private function _setNullDataProvider():void {
+			// dp = null;
+			// }
 			
 			private function _setEmptyDataProvider():void {
-				dp = new ArrayCollection;
+				dp = new <ChartDescriptor>[];
 			}
 			
 			private function _setNullItem():void {
 				if (!dp) {
 					_setEmptyDataProvider();
 				}
-				var index:int = Math.floor(Math.random() * (dp.length + 1));
-				dp.addItemAt(null, index);
-				_testCharts.push(null);
+				// var index:int = Math.floor(Math.random() * (dp.length + 1));
+				// dp.addItemAt(null, index);
+				// _testCharts.push(null);
 			}
 		]]>
 	</fx:Script>
@@ -364,8 +446,8 @@ project mindlessly. Treat all of the below as an example.
 			<s:Group width="100%">
 				<s:ComboBox
 					id="chartsList"
-					dataProvider="{dp}" labelField="name"
-					change="{_onActiveChartChanged(event)}"/>
+					dataProvider="{_chartsListDp}"
+					change="{_onActiveChartChanged()}"/>
 			</s:Group>
 
 			<!-- Selection-related UI -->
@@ -398,7 +480,7 @@ project mindlessly. Treat all of the below as an example.
 			gridDataProvider="{gridDp}"
 			chartStyle="myChartStyle"
 			selectionChange="_onSelectionChanged (event)"
-			chartDataChange="_onChartDataChanged (event)"
+			nodesChange="_onNodesChange (event)"
 			chartActivation="_onChartActivated (event)"/>
 
 		<!-- Selection panel, for monitoring and adjusting selected nodes' value -->
@@ -417,12 +499,12 @@ project mindlessly. Treat all of the below as an example.
 			requestedRowCount="2"
 			rowHeight="22">
 
-			<s:Button label="Add test chart" click="_addTestChart()"/>
-			<s:Button label="Add empty chart" click="_addEmptyChart()"/>
+			<s:Button label="Add test chart" click="_addRandomChart()"/>
+			<!--<s:Button label="Add empty chart" click="_addEmptyChart()"/>
 			<s:Button label="Remove last test chart" click="_removeLastTestChart()"/>
 			<s:Button label="Set NULL data provider" click="_setNullDataProvider()"/>
 			<s:Button label="Set NULL item" click="_setNullItem()"/>
-			<s:Button label="Set empty data provider" click="_setEmptyDataProvider()"/>
+			<s:Button label="Set empty data provider" click="_setEmptyDataProvider()"/> -->
 		</s:TileGroup>
 
 	</s:VGroup>
