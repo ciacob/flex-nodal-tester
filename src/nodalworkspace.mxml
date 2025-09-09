@@ -340,7 +340,7 @@ project mindlessly. Treat all of the below as an example.
 			 * @see Helpers#makeUuid()
 			 */
 			private function _addRandomChart():int {
-				const $dp:Vector.<ChartDescriptor> = dp? dp.concat() : new <ChartDescriptor>[];
+				const $dp:Vector.<ChartDescriptor> = dp ? dp.concat() : new <ChartDescriptor>[];
 				var count:int = Math.floor(Math.random() * 21); // 0..20
 				var values:Vector.<Point> = new <Point>[];
 				for (var i:int = 0; i < count; i++) {
@@ -372,65 +372,118 @@ project mindlessly. Treat all of the below as an example.
 			
 				dp = $dp;
 			
+				nodalEditor.activeChartId = uid;
+			
 				trace('`_addRandomChart()` called. Added (index, item):', index, testChart);
 				return index;
 			}
 			
-			// private function _addEmptyChart():void {
-			// if (!dp) {
-			// _setEmptyDataProvider();
-			// }
-			// var index:int = Math.floor(Math.random() * (dp.length + 1));
-			// var emptyChart:Object = {
-			// name: "Random Item " + (++_numTests),
-			// values: []
-			// };
-			// dp.addItemAt(emptyChart, index);
-			// _testCharts.push(emptyChart);
-			// }
+			/**
+			 * Creates and adds a new empty chart to the data provider.
+			 *
+			 * <p>This function generates a chart with the following characteristics:</p>
+			 * <ul>
+			 * <li>No data points (empty Vector of Points)</li>
+			 * <li>Automatically generated unique identifier</li>
+			 * <li>Incremental name based on test counter</li>
+			 * <li>Default styling (no custom hue factor or dash style)</li>
+			 * <li>Inserted at a random position in the data provider</li>
+			 * </ul>
+			 *
+			 * <p>If the data provider is null, it will be initialized as an empty Vector.</p>
+			 * <p>The empty chart can be used for testing user interactions with charts that have no initial data points.</p>
+			 *
+			 * @return The index at which the new empty chart was inserted in the data provider
+			 *
+			 * @see ChartDescriptor
+			 * @see Helpers#makeUuid()
+			 */
+			private function _addEmptyChart():int {
+				const $dp:Vector.<ChartDescriptor> = dp ? dp.concat() : new <ChartDescriptor>[];
 			
-			// private function _addTestChart():void {
-			// if (!dp) {
-			// return;
-			// }
-			// const idx:int = _addRandomChart();
-			// const testChart:Object = dp.getItemAt(idx);
-			// _testCharts.push(testChart);
-			// }
+				const uid:String = Helpers.makeUuid();
+				var emptyChart:ChartDescriptor = new ChartDescriptor(uid,
+						new <Point>[], "Empty chart " + (++_numTests));
+				_testCharts.push(emptyChart);
+				var index:int = Math.floor(Math.random() * ($dp.length + 1));
+				$dp.splice(index, 0, emptyChart);
+				dp = $dp;
 			
-			// private function _removeLastTestChart():void {
-			// if (!dp) {
-			// return;
-			// }
-			// if (!_testCharts.length) {
-			// return;
-			// }
-			// const toRemove:Object = _testCharts.pop();
-			// var removed:Boolean;
-			// if (toRemove === null) {
-			// removed = dp.removeItemAt(dp.getItemIndex(null));
-			// }
-			// else {
-			// removed = dp.removeItem(toRemove);
-			// }
-			// trace('`_removeRandomItem()` called. Removed: ', removed ? JSON.stringify(toRemove) : 'NULL');
-			// }
+				nodalEditor.activeChartId = uid;
 			
-			// private function _setNullDataProvider():void {
-			// dp = null;
-			// }
+				trace('`_addEmptyChart()` called. Added (index, item):', index, emptyChart);
+				return index;
+			}
 			
+			/**
+			 * Removes the last test chart that was added via stress-testing functions.
+			 *
+			 * <p>This function removes the most recently added test chart from both the
+			 * internal tracking array (_testCharts) and the main data provider (dp).
+			 * It handles both regular ChartDescriptor objects and null entries.</p>
+			 *
+			 * <p>If there are no test charts to remove or the data provider is null,
+			 * the function returns early without making any changes.</p>
+			 */
+			private function _removeLastTestChart():void {
+				const $dp:Vector.<ChartDescriptor> = dp ? dp.concat() : null;
+				if (!$dp) {
+					return;
+				}
+				if (!_testCharts.length) {
+					return;
+				}
+				const toRemove:Object = _testCharts.pop();
+				var removed:Boolean = false;
+			
+				if (toRemove === null) {
+					// Find and remove null entry from Vector
+					const nullIndex:int = $dp.indexOf(null);
+					if (nullIndex >= 0) {
+						$dp.splice(nullIndex, 1);
+						dp = $dp;
+						removed = true;
+					}
+				}
+				else {
+					// Find and remove the specific ChartDescriptor from Vector
+					const itemIndex:int = $dp.indexOf(toRemove as ChartDescriptor);
+					if (itemIndex >= 0) {
+						$dp.splice(itemIndex, 1);
+						dp = $dp;
+						removed = true;
+					}
+				}
+				trace('`_removeLastTestChart()` called. Removed: ', removed ? toRemove.toString() : 'NULL');
+			}
+			
+			/**
+			 * Corner case: sets `null` as a data provider.
+			 */
+			private function _setNullDataProvider():void {
+				dp = null;
+			}
+			
+			/**
+			 * Corner case: sets an empty `ChartDescriptor` Vector as a data provider.
+			 */
 			private function _setEmptyDataProvider():void {
 				dp = new <ChartDescriptor>[];
 			}
 			
+			/**
+			 * Corner case: sets `null` as a chart (practically violating the
+			 * ChartDescriptor Vectors' integrity).
+			 */
 			private function _setNullItem():void {
-				if (!dp) {
-					_setEmptyDataProvider();
-				}
-				// var index:int = Math.floor(Math.random() * (dp.length + 1));
-				// dp.addItemAt(null, index);
-				// _testCharts.push(null);
+				const $dp:Vector.<ChartDescriptor> = dp ? dp.concat() : new <ChartDescriptor>[];
+			
+				const index:int = Math.floor(Math.random() * ($dp.length + 1));
+				$dp.splice(index, 0, null);
+				_testCharts.push(null);
+			
+				dp = $dp;
+				nodalEditor.activeChartId = null;
 			}
 		]]>
 	</fx:Script>
@@ -499,11 +552,12 @@ project mindlessly. Treat all of the below as an example.
 			rowHeight="22">
 
 			<s:Button label="Add test chart" click="_addRandomChart()"/>
-			<!--<s:Button label="Add empty chart" click="_addEmptyChart()"/>
+			<s:Button label="Add empty chart" click="_addEmptyChart()"/>
 			<s:Button label="Remove last test chart" click="_removeLastTestChart()"/>
+			<s:Button label="Set empty data provider" click="_setEmptyDataProvider()"/>
 			<s:Button label="Set NULL data provider" click="_setNullDataProvider()"/>
 			<s:Button label="Set NULL item" click="_setNullItem()"/>
-			<s:Button label="Set empty data provider" click="_setEmptyDataProvider()"/> -->
+
 		</s:TileGroup>
 
 	</s:VGroup>
